@@ -1,0 +1,36 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: swim-consumer
+  namespace: swim-backend
+spec:
+  certManager:
+    issuerName: "swim-ca-issuer"
+    issuerKind: "ClusterIssuer"
+  kafka:
+    enabled: true
+    deploymentMode: "managed"
+    storageSize: "1Gi"
+  client:
+    image: "quay.io/masales/swim-dnotam-consumer:latest"
+    replicas: 1
+    mongo:
+      database: "swim-dnotam"
+      user: "swim"
+      password: "swim"
+      storageSize: "1Gi"
+    config:
+      providers:
+        - providerId: validator
+          subscriptionManager:
+            url: "http://swim-consumervalidator.swim-consumervalidator.svc.cluster.local:8080"
+          amqpBroker:
+            host: "swim-consumervalidator-artemis-hdls-svc.swim-consumervalidator.svc.cluster.local"
+            port: 5672
+            sslEnabled: true
+            username: "admin"
+            password: "adminPassword"
+      dnotamSubscriptions:
+        - provider: "swim-consumervalidator"
+          topic: "DNOTAM/v1"
+          description: "All DNOTAM events"

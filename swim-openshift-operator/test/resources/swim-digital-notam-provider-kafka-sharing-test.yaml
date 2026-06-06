@@ -1,0 +1,75 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamProvider
+metadata:
+  name: provider-first
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  postgres:
+    database: swim-dnotam
+    user: swim-provider
+    password: swim-provider
+  artemis:
+    name: swim-artemis
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/'
+      realm: swim
+      clientId: amq-broker
+      clientSecret: Is9wwNhgH4EQTDSmpT5Oa9XHSp73QlrA
+  kafka:
+    enabled: true
+    deploymentMode: managed
+  provider:
+    consumeFromClientTopics: false
+    observability:
+      openTelemetryEnabled: true
+      otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+      prometheusEnabled: true
+      serviceMonitorEnabled: true
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-dnotam-provider'
+      clientSecret: 'L3wFbBGpRtHzfkLj0ntMB7Q9DQx8Idvc'
+---
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: client-second
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  kafka:
+    enabled: true
+    deploymentMode: managed
+  client:
+    config:
+      providers:
+        - providerId: "provider"
+          subscriptionManager:
+            url: "https://dnotam-consumer-validator.swim-sandbox.svc:8443"
+          amqpBroker:
+            host: "swim-artemis-hdls-svc.swim-sandbox.svc.cluster.local"
+            port: 5672
+            sslEnabled: false
+            username: "admin"
+            password: "admin"
+      dnotamSubscriptions:
+        - topic: "DigitalNOTAMService"
+          eventScenario:
+            - "SFC.CON"
+            - "AD.LIM"
+          airportHeliport:
+            - "EADH"
+            - "EADD"
+          description: "Surface contamination and aerodrome limitations"
+          provider: "provider"
+      observability:
+        openTelemetryEnabled: true
+        otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+        prometheusEnabled: true
+        serviceMonitorEnabled: true
+

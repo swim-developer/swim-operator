@@ -1,0 +1,27 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimEd254Provider
+metadata:
+  name: swim-ed254-provider
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  artemis:
+    acceptors:
+      verifyHost: false
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/'
+      realm: swim
+      clientId: amq-broker
+  provider:
+    aerodromes:
+      - "LPPT"
+      - "LPPR"
+    heartbeatIntervalSeconds: 30
+    maxConsumers: 100
+    observability:
+      otelEndpoint: 'http://tempo-simplest-distributor.tempostack.svc.cluster.local:4317'
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-ed254-provider'
+      clientSecret: 'CHANGE_ME'

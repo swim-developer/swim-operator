@@ -1,0 +1,26 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDnotamConsumerValidator
+metadata:
+  name: swim-consumervalidator-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  artemis:
+    broker:
+      name: "consumervalidator-artemis"
+      size: 1
+    credentials:
+      adminUser: "admin"
+      adminPassword: "adminPassword"
+  appConfig:
+    quarkus:
+      httpPort: 8080
+      sslPort: 8443
+    amqp:
+      port: 5672
+      username: "admin"
+      password: "adminPassword"
+  image:
+    repository: "quay.io/masales/swim-dnotam-consumer-validator"
+    tag: "latest"

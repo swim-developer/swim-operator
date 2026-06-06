@@ -1,0 +1,79 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: dnotam-production
+  namespace: swim-prod
+spec:
+  tags:
+    environment: production
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  kafka:
+    enabled: true
+    replicas: 1
+    version: '4.0.0'
+    storageSize: '5Gi'
+    storageClassName: 'standard'
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+  client:
+    replicas: 1
+    image: 'quay.io/masales/swim-dnotam-consumer:latest'
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    mongo:
+      storageSize: '1Gi'
+      user: 'swim'
+      password: 'strong-password-here'
+      database: 'swim-dnotam'
+    config:
+      providers:
+        - providerId: "eurocontrol"
+          subscriptionManager:
+            url: "https://sm-eurocontrol.swim.prod.svc:8443"
+            resilience:
+              connectTimeoutMs: 5000
+              readTimeoutMs: 30000
+              retryMaxAttempts: 3
+              retryDelayMs: 1000
+          amqpBroker:
+            host: "artemis-eurocontrol.swim.prod.svc"
+            port: 5671
+            sslEnabled: true
+            username: "swim-client"
+            password: "strong-password-here"
+        - providerId: "nav-portugal"
+          subscriptionManager:
+            url: "https://sm-navpt.swim.prod.svc:8443"
+          amqpBroker:
+            host: "artemis-navpt.swim.prod.svc"
+            port: 5671
+            sslEnabled: true
+            username: "swim-client"
+            password: "strong-password-here"
+      dnotamSubscriptions:
+        - topic: "DigitalNOTAMService"
+          eventScenario:
+            - "SFC.CON"
+            - "AD.LIM"
+          airportHeliport:
+            - "EADH"
+            - "EADD"
+          description: "Surface contamination and aerodrome limitations"
+          provider: "eurocontrol"
+      observability:
+        openTelemetryEnabled: true
+        otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+        prometheusEnabled: true
+        serviceMonitorEnabled: true

@@ -1,0 +1,42 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: dnotam
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  kafka:
+    enabled: true
+    deploymentMode: external
+    bootstrapServers: 'my-kafka.external.com:9092'
+    username: 'kafka-user'
+    password: 'kafka-password'
+  client:
+    config:
+      providers:
+        - providerId: "provider"
+          subscriptionManager:
+            url: "https://dnotam-consumer-validator.swim-sandbox.svc.cluster.local:8443"
+          amqpBroker:
+            host: "dnotam-consumer-validator-artemis-amqps-0-svc.cluster.local"
+            port: 5671
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      dnotamSubscriptions:
+        - topic: "DigitalNOTAMService"
+          eventScenario:
+            - "SFC.CON"
+            - "AD.LIM"
+          airportHeliport:
+            - "EADH"
+            - "EADD"
+          description: "Surface contamination and aerodrome limitations"
+          provider: "provider"
+      observability:
+        openTelemetryEnabled: false
+        otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+        prometheusEnabled: true
+        serviceMonitorEnabled: false

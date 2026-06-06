@@ -1,0 +1,26 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDnotamProviderValidator
+metadata:
+  name: dnotam-provider-validator
+  labels:
+    app.kubernetes.io/name: swim-operator
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  keycloak:
+    url: "https://rhbk.apps.ocp4.masales.cloud/"
+    realm: "swim"
+    clientId: "swim-public-client"
+  providerAPIURLs: "https://swim-dnotam-provider-mtls-swim-sandbox.apps.ocp4.masales.cloud"
+  mariadb:
+    database: "swim_provider_validator"
+    username: "swim"
+    password: "swim"
+  amqp:
+    host: "swim-dnotam-provider-artemis-swim-sandbox.apps.ocp4.masales.cloud"
+    port: 443
+  mtls:
+    enabled: true
+    certsSecretName: "swim-dnotam-client-tls"
+    passwordsSecretName: "dnotam-provider-validator-passwords"
+  route:
+    host: "dnotam-provider-validator-swim-sandbox.apps.ocp4.masales.cloud"

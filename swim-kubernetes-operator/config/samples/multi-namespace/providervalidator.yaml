@@ -1,0 +1,22 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDnotamProviderValidator
+metadata:
+  name: swim-providervalidator
+  namespace: swim-providervalidator
+spec:
+  certManager:
+    issuerName: "swim-ca-issuer"
+    issuerKind: "ClusterIssuer"
+  keycloak:
+    url: "https://KEYCLOAK_HOST_PLACEHOLDER"
+    realm: "swim"
+    clientId: "swim-public-client"
+  providerAPIURLs: "http://swim-dnotam-provider.swim-backend.svc.cluster.local:8080"
+  mariadb:
+    database: "providervalidator"
+    username: "providervalidator"
+    password: "providervalidator123"
+    storageSize: "1Gi"
+  ingress:
+    enabled: true
+    host: "PROVIDERVALIDATOR_HOST_PLACEHOLDER"

@@ -1,0 +1,53 @@
+# Build output
+bin/
+dist/
+main
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# Dependency
+vendor/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+*.code-workspace
+.vscode/
+*.swp
+*.swo
+*~
+
+# AI tools
+.claude/
+.cursor/
+.copilot/
+.aider/
+.codeium/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.*
+!.env.example

@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- apps_v1alpha1_swimdigitalnotamconsumer.yaml
+- apps_v1alpha1_swimdigitalnotamprovider.yaml
+- apps_v1alpha1_swimdnotamconsumervalidator.yaml
+- apps_v1alpha1_swimdnotamprovidervalidator.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

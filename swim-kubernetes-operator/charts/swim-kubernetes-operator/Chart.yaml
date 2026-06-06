@@ -1,0 +1,17 @@
+apiVersion: v2
+name: swim-kubernetes-operator
+description: >-
+  SWIM Kubernetes Operator — manages DNOTAM Provider, Consumer, ConsumerValidator, and ProviderValidator
+  lifecycle on any Kubernetes cluster (vanilla, EKS, GKE, AKS, Minikube).
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+home: https://github.com/swim-developer/swim-kubernetes-operator
+keywords:
+  - swim
+  - dnotam
+  - aviation
+  - operator
+  - kubernetes
+maintainers:
+  - name: SWIM Developer

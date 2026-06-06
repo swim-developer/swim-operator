@@ -1,0 +1,37 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamProvider
+metadata:
+  name: swim-provider-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  provider:
+    image: "quay.io/masales/swim-dnotam-provider:latest"
+    replicas: 1
+    logLevel: "DEBUG"
+    ingress:
+      enabled: true
+      host: "swim-provider.local"
+  postgres:
+    database: "providerdb"
+    user: "provider"
+    password: "password123"
+    storageSize: "1Gi"
+  kafka:
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  artemis:
+    name: "swim-artemis"
+    size: 1
+    acceptors:
+      ingressHost: "artemis.local"
+    oidc:
+      enabled: false
+      authServerUrl: "http://keycloak:8080/auth"
+      realm: "swim"
+      clientId: "amq-broker"
+      clientSecret: "secret"
+  oidc:
+    authServerUrl: "http://keycloak:8080/auth"
+    clientId: "swim-provider"
+    clientSecret: "secret"

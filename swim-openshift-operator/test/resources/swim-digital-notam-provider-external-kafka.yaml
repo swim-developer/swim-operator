@@ -1,0 +1,44 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamProvider
+metadata:
+  name: provider-external-kafka
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  postgres:
+    database: swim-dnotam
+    user: swim-provider
+    password: swim-provider
+  artemis:
+    name: swim-artemis
+    adminUser: admin
+    adminPassword: admin
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/'
+      realm: swim
+      clientId: amq-broker
+      clientSecret: Is9wwNhgH4EQTDSmpT5Oa9XHSp73QlrA
+  kafka:
+    enabled: true
+    deploymentMode: external
+    bootstrapServers: kafka-external.prod.svc.cluster.local:9092
+    username: swim-provider
+    password: kafka-secure-password
+  provider:
+    logLevel: INFO
+    consumeFromClientTopics: false
+    routes:
+      httpsEdge: true
+      httpsPassthrough: true
+    observability:
+      openTelemetryEnabled: false
+      otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+      prometheusEnabled: true
+      serviceMonitorEnabled: false
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-dnotam-provider'
+      clientSecret: 'L3wFbBGpRtHzfkLj0ntMB7Q9DQx8Idvc'
+

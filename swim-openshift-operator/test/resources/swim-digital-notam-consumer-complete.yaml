@@ -1,0 +1,93 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: dnotam-client
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  kafka:
+    enabled: true
+    deploymentMode: managed
+    replicas: 1
+    storageSize: 5Gi
+    version: 4.0.0
+  client:
+    image: quay.io/masales/swim-dnotam-consumer:latest
+    replicas: 1
+    mongo:
+      storageSize: 2Gi
+      user: swim
+      password: swim
+      database: swim-dnotam
+    config:
+      providers:
+        - providerId: "provider"
+          subscriptionManager:
+            url: "https://dnotam-consumer-validator.swim-sandbox.svc:8443"
+          amqpBroker:
+            host: "swim-artemis-hdls-svc.swim-sandbox.svc.cluster.local"
+            port: 5672
+            sslEnabled: false
+            username: "admin"
+            password: "admin"
+      dnotamSubscriptions:
+        - topic: "DigitalNOTAMService"
+          eventScenario:
+            - "SFC.CON"
+            - "AD.LIM"
+          airportHeliport:
+            - "EADH"
+            - "EADD"
+          description: "Surface contamination and aerodrome limitations"
+          provider: "provider"
+      observability:
+        openTelemetryEnabled: true
+        otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+        prometheusEnabled: true
+        serviceMonitorEnabled: true
+---
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamProvider
+metadata:
+  name: dnotam-provider
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  postgres:
+    storageSize: 5Gi
+    database: swim-dnotam
+    user: swim-provider
+    password: swim-provider
+  artemis:
+    name: swim-artemis
+    size: 1
+    adminUser: admin
+    adminPassword: admin
+    jmx:
+      enabled: true
+      port: 1099
+  kafka:
+    enabled: true
+    deploymentMode: managed
+  provider:
+    image: quay.io/masales/swim-dnotam-provider:latest
+    replicas: 1
+    logLevel: INFO
+    consumeFromClientTopics: false
+    routes:
+      httpsEdge: true
+      httpsPassthrough: true
+    observability:
+      openTelemetryEnabled: true
+      otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+      prometheusEnabled: true
+      serviceMonitorEnabled: true
+    oidc:
+      enabled: true
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-dnotam-provider'
+      clientSecret: 'L3wFbBGpRtHzfkLj0ntMB7Q9DQx8Idvc'

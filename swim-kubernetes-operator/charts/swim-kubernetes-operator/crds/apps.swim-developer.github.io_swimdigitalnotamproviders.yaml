@@ -1,0 +1,400 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.18.0
+  name: swimdigitalnotamproviders.apps.swim-developer.github.io
+spec:
+  group: apps.swim-developer.github.io
+  names:
+    kind: SwimDigitalNotamProvider
+    listKind: SwimDigitalNotamProviderList
+    plural: swimdigitalnotamproviders
+    singular: swimdigitalnotamprovider
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: SwimDigitalNotamProvider is the Schema for the swimdigitalnotamproviders
+          API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: SwimDigitalNotamProviderSpec defines the desired state of
+              SwimDigitalNotamProvider.
+            properties:
+              artemis:
+                description: Artemis Configuration
+                properties:
+                  acceptors:
+                    properties:
+                      amqpPort:
+                        format: int32
+                        type: integer
+                      amqpsPort:
+                        format: int32
+                        type: integer
+                      ingressHost:
+                        type: string
+                      verifyHost:
+                        default: true
+                        type: boolean
+                    required:
+                    - verifyHost
+                    type: object
+                  adminPassword:
+                    default: admin
+                    type: string
+                  adminUser:
+                    default: admin
+                    type: string
+                  brokerProperties:
+                    items:
+                      type: string
+                    type: array
+                  console:
+                    properties:
+                      expose:
+                        type: boolean
+                      sslEnabled:
+                        type: boolean
+                    type: object
+                  jmx:
+                    properties:
+                      enabled:
+                        default: true
+                        type: boolean
+                      port:
+                        default: 1099
+                        format: int32
+                        type: integer
+                    type: object
+                  keystorePassword:
+                    default: changeit
+                    type: string
+                  name:
+                    default: swim-artemis
+                    type: string
+                  oidc:
+                    properties:
+                      authServerUrl:
+                        type: string
+                      clientId:
+                        default: amq-broker
+                        type: string
+                      clientSecret:
+                        type: string
+                      realm:
+                        type: string
+                    required:
+                    - authServerUrl
+                    - clientId
+                    - clientSecret
+                    - realm
+                    type: object
+                  size:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storage:
+                    properties:
+                      size:
+                        default: 5Gi
+                        pattern: ^([5-9]|[1-9][0-9]+)Gi$
+                        type: string
+                      storageClassName:
+                        type: string
+                    type: object
+                required:
+                - adminPassword
+                - adminUser
+                - name
+                - oidc
+                type: object
+              certManager:
+                description: CertManagerSpec defines cert-manager settings
+                properties:
+                  enabled:
+                    default: true
+                    type: boolean
+                  issuerKind:
+                    default: ClusterIssuer
+                    type: string
+                  issuerName:
+                    default: swim-ca-issuer
+                  issuerKind:
+                    default: ClusterIssuer
+                    type: string
+                type: object
+              global:
+                description: Global configuration
+                properties:
+                  clusterDomain:
+                    default: ""
+                    description: |-
+                      The cluster domain (e.g., cluster.local)
+                      If not specified, it will be automatically detected or default to cluster.local.
+                    type: string
+                type: object
+              hpa:
+                description: HPAConfig defines HorizontalPodAutoscaler settings
+                properties:
+                  enabled:
+                    type: boolean
+                  maxReplicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  minReplicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  targetCPUUtilizationPercentage:
+                    default: 80
+                    format: int32
+                    type: integer
+                required:
+                - maxReplicas
+                type: object
+              kafka:
+                description: Kafka Configuration
+                properties:
+                  bootstrapServers:
+                    type: string
+                  deploymentMode:
+                    default: managed
+                    enum:
+                    - managed
+                    - external
+                    type: string
+                  enabled:
+                    default: true
+                    type: boolean
+                  password:
+                    type: string
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  storageSize:
+                    default: 1Gi
+                    type: string
+                  username:
+                    type: string
+                  version:
+                    default: 4.0.0
+                    type: string
+                type: object
+              postgres:
+                description: Postgres Configuration
+                properties:
+                  database:
+                    default: swim-dnotam
+                    type: string
+                  image:
+                    default: postgres:16-alpine
+                    type: string
+                  password:
+                    default: swim-provider
+                    type: string
+                  resources:
+                    properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            request:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
+                  storageSize:
+                    default: 5Gi
+                    type: string
+                  user:
+                    default: swim-provider
+                    type: string
+                type: object
+              provider:
+                description: Provider Application Configuration
+                properties:
+                  consumeFromClientTopics:
+                    default: false
+                    type: boolean
+                  image:
+                    default: quay.io/masales/swim-dnotam-provider:latest
+                    type: string
+                  ingress:
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      enabled:
+                        default: true
+                        type: boolean
+                      host:
+                        type: string
+                      tlsSecretName:
+                        type: string
+                    type: object
+                  logLevel:
+                    default: INFO
+                    type: string
+                  observability:
+                    description: ObservabilitySpec defines monitoring and tracing
+                      settings
+                    properties:
+                      openTelemetryEnabled:
+                        default: true
+                        type: boolean
+                      otelEndpoint:
+                        type: string
+                      otelHeaders:
+                        default: ""
+                        type: string
+                      prometheusEnabled:
+                        default: true
+                        type: boolean
+                      serviceMonitorEnabled:
+                        default: true
+                        type: boolean
+                    required:
+                    - otelEndpoint
+                    type: object
+                  oidc:
+                    properties:
+                      authServerUrl:
+                        type: string
+                      clientId:
+                        type: string
+                      clientSecret:
+                        type: string
+                    required:
+                    - authServerUrl
+                    - clientId
+                    - clientSecret
+                    type: object
+                  replicas:
+                    default: 1
+                    format: int32
+                    type: integer
+                  resources:
+                    properties:
+                      claims:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            request:
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                      limits:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        type: object
+                      requests:
+                        additionalProperties:
+                          anyOf:
+                          - type: integer
+                          - type: string
+                          pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                          x-kubernetes-int-or-string: true
+                        type: object
+                    type: object
+                required:
+                - consumeFromClientTopics
+                - oidc
+                type: object
+            type: object
+          status:
+            description: SwimDigitalNotamProviderStatus defines the observed state
+              of SwimDigitalNotamProvider.
+            properties:
+              conditions:
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      format: date-time
+                      type: string
+                    message:
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

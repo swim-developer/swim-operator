@@ -1,0 +1,78 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamProvider
+metadata:
+  name: provider-production
+  namespace: swim-sandbox
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  postgres:
+    storageSize: 10Gi
+    database: swim-dnotam-prod
+    user: swim-provider
+    password: SecurePassword123!
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 1
+  artemis:
+    name: swim-artemis
+    size: 2
+    adminUser: admin
+    adminPassword: SecureArtemisPassword!
+    keystorePassword: changeit
+    acceptors:
+      amqpsPort: 5671
+      amqpPort: 5672
+      verifyHost: false
+    console:
+      sslEnabled: true
+      expose: true
+    jmx:
+      enabled: true
+      port: 1099
+    brokerProperties:
+      - addressSettings.#.maxSizeBytes=10485760
+      - addressSettings.#.pageMaxCacheSize=5
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/'
+      realm: swim
+      clientId: amq-broker
+      clientSecret: Is9wwNhgH4EQTDSmpT5Oa9XHSp73QlrA
+  kafka:
+    enabled: true
+    deploymentMode: managed
+    replicas: 3
+    storageSize: 10Gi
+    version: 4.0.0
+  provider:
+    image: quay.io/masales/swim-dnotam-provider:latest
+    replicas: 2
+    logLevel: INFO
+    consumeFromClientTopics: true
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 500m
+      limits:
+        memory: 1Gi
+        cpu: 1
+    routes:
+      httpsEdge: true
+      httpsPassthrough: true
+      httpsEdgeHost: swim-provider.apps.ocp4.masales.cloud
+      httpsPassthroughHost: swim-provider-mtls.apps.ocp4.masales.cloud
+    observability:
+      openTelemetryEnabled: true
+      otelEndpoint: 'http://tempo-tempo-distributor.central-observability.svc.cluster.local:4317'
+      prometheusEnabled: true
+      serviceMonitorEnabled: true
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-dnotam-provider'
+      clientSecret: 'L3wFbBGpRtHzfkLj0ntMB7Q9DQx8Idvc'
+

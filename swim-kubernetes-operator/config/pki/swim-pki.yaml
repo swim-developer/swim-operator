@@ -1,0 +1,39 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: swim-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: SWIM Root CA
+  secretName: swim-ca-secret
+  duration: 87600h # 10 years
+  renewBefore: 8760h # 1 year
+  privateKey:
+    algorithm: RSA
+    size: 4096
+  subject:
+    organizations:
+      - SWIM Development
+    organizationalUnits:
+      - PKI
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: swim-ca-issuer
+spec:
+  ca:
+    secretName: swim-ca-secret
+

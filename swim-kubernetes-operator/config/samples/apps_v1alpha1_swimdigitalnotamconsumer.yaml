@@ -1,0 +1,32 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: swim-consumer-sample
+spec:
+  kafka:
+    enabled: true
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  client:
+    image: "quay.io/masales/swim-dnotam-consumer:latest"
+    replicas: 1
+    mongo:
+      database: "swim-dnotam"
+      storageSize: "1Gi"
+    config:
+      providers:
+        - providerId: validator
+          subscriptionManager:
+            url: "http://swim-consumervalidator:8080"
+          amqpBroker:
+            host: "swim-consumervalidator-artemis-hdls-svc"
+            port: 5672
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      dnotamSubscriptions:
+        - provider: "validator"
+          topic: "DNOTAM/v1"
+          description: "Sample subscription"
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"

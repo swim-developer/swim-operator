@@ -1,0 +1,32 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDigitalNotamConsumer
+metadata:
+  name: swim-dnotam-client
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  client:
+    config:
+      providers:
+        - providerId: "provider"
+          subscriptionManager:
+            url: "https://dnotam-consumer-validator-swim-external-provider.apps.ocp4.masales.cloud"
+          amqpBroker:
+            host: "dnotam-consumer-validator-artemis-swim-external-provider.apps.ocp4.masales.cloud"
+            port: 443
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      dnotamSubscriptions:
+        - topic: "DigitalNOTAMService"
+          eventScenario:
+            - "SFC.CON"
+            - "AD.LIM"
+          airportHeliport:
+            - "EADH"
+            - "EADD"
+          description: "Surface contamination and aerodrome limitations"
+          provider: "provider"
+      observability:
+        otelEndpoint: 'http://tempo-simplest-distributor.tempostack.svc.cluster.local:4317'

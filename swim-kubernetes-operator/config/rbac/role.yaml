@@ -1,0 +1,190 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - persistentvolumeclaims
+  - pods
+  - secrets
+  - serviceaccounts
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimdigitalnotamconsumers
+  - swimdigitalnotamproviders
+  - swimdnotamconsumervalidators
+  - swimdnotamprovidervalidators
+  - swimed254consumers
+  - swimed254consumervalidators
+  - swimed254providers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimdigitalnotamconsumers/finalizers
+  - swimdigitalnotamproviders/finalizers
+  - swimdnotamconsumervalidators/finalizers
+  - swimdnotamprovidervalidators/finalizers
+  - swimed254consumers/finalizers
+  - swimed254consumervalidators/finalizers
+  - swimed254providers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimdigitalnotamconsumers/status
+  - swimdigitalnotamproviders/status
+  - swimdnotamconsumervalidators/status
+  - swimdnotamprovidervalidators/status
+  - swimed254consumers/status
+  - swimed254consumervalidators/status
+  - swimed254providers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - broker.amq.io
+  resources:
+  - activemqartemises
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cert-manager.io
+  resources:
+  - certificates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - console.streamshub.github.com
+  resources:
+  - consoles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kafka.strimzi.io
+  resources:
+  - kafkanodepools
+  - kafkas
+  - kafkatopics
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

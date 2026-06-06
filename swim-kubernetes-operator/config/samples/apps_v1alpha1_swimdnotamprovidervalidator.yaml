@@ -1,0 +1,13 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimDnotamProviderValidator
+metadata:
+  name: swim-providervalidator-sample
+spec:
+  keycloak:
+    url: "http://keycloak.local"
+    realm: "swim"
+    clientId: "provider-validator"
+  providerAPIURLs: "http://swim-provider:8080"
+  ingress:
+    enabled: true
+    host: "provider-validator.local"

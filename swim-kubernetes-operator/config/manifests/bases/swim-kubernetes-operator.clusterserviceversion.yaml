@@ -1,0 +1,66 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    categories: "Integration & Delivery"
+    description: >-
+      SWIM Kubernetes Operator manages DNOTAM Provider, Consumer, ConsumerValidator,
+      and ProviderValidator lifecycle on vanilla Kubernetes clusters.
+  name: swim-kubernetes-operator.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: DNOTAM Consumer — subscribes to DNOTAM events via AMQP and persists them.
+      displayName: SWIM Digital NOTAM Consumer
+      kind: SwimDigitalNotamConsumer
+      name: swimdigitalnotamconsumers.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: DNOTAM Provider — publishes DNOTAM events as AMQP topics via Camel.
+      displayName: SWIM Digital NOTAM Provider
+      kind: SwimDigitalNotamProvider
+      name: swimdigitalnotamproviders.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: Consumer Validator — simulates a SWIM external provider for consumer testing.
+      displayName: SWIM DNOTAM Consumer Validator
+      kind: SwimDnotamConsumerValidator
+      name: swimdnotamconsumervalidators.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: Provider Validator — simulates a SWIM consumer for provider testing.
+      displayName: SWIM DNOTAM Provider Validator
+      kind: SwimDnotamProviderValidator
+      name: swimdnotamprovidervalidators.apps.swim-developer.github.io
+      version: v1alpha1
+  description: |
+    # SWIM Kubernetes Operator
+
+    Manages the lifecycle of SWIM DNOTAM services on any Kubernetes cluster.
+
+    ## Prerequisites
+    - cert-manager
+    - Strimzi Kafka Operator (optional)
+    - ActiveMQ Artemis Operator (broker.amq.io)
+    - Prometheus Operator (optional, for ServiceMonitor support)
+  displayName: SWIM Kubernetes Operator
+  icon:
+  - base64data: ""
+    mediatype: image/png
+  install:
+    spec:
+      deployments: []
+    strategy: deployment
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  maturity: alpha
+  provider:
+    name: SWIM Developer
+  version: 0.0.1

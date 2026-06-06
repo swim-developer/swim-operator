@@ -1,0 +1,551 @@
+---
+- name: SWIM Kubernetes Operator - Complete Setup
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    minikube_profile: swim
+    minikube_cpus: 8
+    minikube_memory: 16384
+    minikube_driver: podman
+    cert_manager_version: v1.16.0
+    operator_base_dir: "{{ playbook_dir | dirname }}"
+    swim_operator_manifest: "{{ operator_base_dir }}/dist/install.yaml"
+    swim_pki_manifest: "{{ operator_base_dir }}/config/pki/swim-pki.yaml"
+    keycloak_manifest: "{{ operator_base_dir }}/config/keycloak/keycloak.yaml"
+    samples_dir: "{{ operator_base_dir }}/config/samples/multi-namespace"
+    deploy_samples: false
+    cleanup: false
+    restart: false
+    install_prometheus: false
+    ns_keycloak: keycloak
+    ns_consumervalidator: swim-consumervalidator
+    ns_backend: swim-backend
+    ns_providervalidator: swim-providervalidator
+
+  tasks:
+    - name: Cleanup - Delete minikube profile
+      ansible.builtin.command: minikube delete --profile={{ minikube_profile }}
+      when: cleanup
+      register: cleanup_result
+      failed_when: false
+
+    - name: Cleanup - Display result
+      ansible.builtin.debug:
+        msg: |
+          ✅ Cleanup complete!
+          
+          Minikube profile '{{ minikube_profile }}' deleted.
+          
+          To recreate, run:
+            ansible-playbook swim-setup.yml -e deploy_samples=true
+      when: cleanup
+
+    - name: Exit after cleanup
+      ansible.builtin.meta: end_play
+      when: cleanup
+
+    - name: Restart - Start existing minikube profile
+      ansible.builtin.command: minikube start --profile={{ minikube_profile }}
+      when: restart
+      register: restart_result
+
+    - name: Restart - Set kubectl context
+      ansible.builtin.command: kubectl config use-context {{ minikube_profile }}
+      when: restart
+
+    - name: Restart - Display result
+      ansible.builtin.debug:
+        msg: |
+          ✅ Environment restarted!
+          
+          Minikube profile '{{ minikube_profile }}' is running.
+          Kubectl context set to '{{ minikube_profile }}'.
+          
+          Verify pods:
+            kubectl get pods -n swim-consumervalidator
+            kubectl get pods -n swim-backend
+            kubectl get pods -n swim-providervalidator
+      when: restart
+
+    - name: Exit after restart
+      ansible.builtin.meta: end_play
+      when: restart
+
+    - name: Check if minikube is installed
+      ansible.builtin.command: which minikube
+      register: minikube_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if minikube is not installed
+      ansible.builtin.fail:
+        msg: |
+          Minikube is not installed. Please install it first:
+          - macOS: brew install minikube
+          - Linux: curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && sudo install minikube-linux-amd64 /usr/local/bin/minikube
+      when: minikube_check.rc != 0
+
+    - name: Check if kubectl is installed
+      ansible.builtin.command: which kubectl
+      register: kubectl_check
+      changed_when: false
+      failed_when: false
+
+    - name: Get latest kubectl version
+      ansible.builtin.uri:
+        url: https://dl.k8s.io/release/stable.txt
+        return_content: true
+      register: kubectl_version
+      when: kubectl_check.rc != 0
+
+    - name: Determine kubectl download URL
+      ansible.builtin.set_fact:
+        kubectl_url: "https://dl.k8s.io/release/{{ kubectl_version.content | trim }}/bin/{{ 'darwin' if ansible_system == 'Darwin' else 'linux' }}/{{ 'arm64' if ansible_architecture == 'aarch64' or ansible_architecture == 'arm64' else 'amd64' }}/kubectl"
+      when: kubectl_check.rc != 0
+
+    - name: Download kubectl
+      ansible.builtin.get_url:
+        url: "{{ kubectl_url }}"
+        dest: /tmp/kubectl
+        mode: '0755'
+      when: kubectl_check.rc != 0
+
+    - name: Install kubectl to /usr/local/bin
+      ansible.builtin.command: install /tmp/kubectl /usr/local/bin/kubectl
+      become: true
+      when: kubectl_check.rc != 0
+
+    - name: Verify kubectl installation
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_verify
+      changed_when: false
+      when: kubectl_check.rc != 0
+
+    - name: Display kubectl installation result
+      ansible.builtin.debug:
+        msg: "kubectl installed: {{ kubectl_verify.stdout }}"
+      when: kubectl_check.rc != 0
+
+    - name: Delete existing minikube profile (clean start)
+      ansible.builtin.command: minikube delete --profile={{ minikube_profile }}
+      register: minikube_delete
+      failed_when: false
+      changed_when: minikube_delete.rc == 0
+
+    - name: Create minikube profile
+      ansible.builtin.command: >
+        minikube start
+        --profile={{ minikube_profile }}
+        --cpus={{ minikube_cpus }}
+        --memory={{ minikube_memory }}
+        --addons=ingress
+        --driver={{ minikube_driver }}
+      register: minikube_start
+
+    - name: Set kubectl context to minikube profile
+      ansible.builtin.command: kubectl config use-context {{ minikube_profile }}
+      changed_when: true
+
+    - name: Wait for minikube to be ready
+      ansible.builtin.command: kubectl get nodes
+      register: nodes_ready
+      until: nodes_ready.rc == 0
+      retries: 30
+      delay: 10
+
+    - name: Install cert-manager
+      ansible.builtin.command: >
+        kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/{{ cert_manager_version }}/cert-manager.yaml
+      register: cert_manager_install
+
+    - name: Wait for cert-manager deployment
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=120s deployment/cert-manager -n cert-manager
+      retries: 3
+      delay: 10
+      register: cert_manager_wait
+      until: cert_manager_wait.rc == 0
+
+    - name: Wait for cert-manager webhook
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=120s deployment/cert-manager-webhook -n cert-manager
+      retries: 3
+      delay: 10
+      register: cert_manager_webhook_wait
+      until: cert_manager_webhook_wait.rc == 0
+
+    - name: Wait for cert-manager webhook to be fully ready
+      ansible.builtin.command: >
+        kubectl wait --for=condition=ready --timeout=120s pod -l app=webhook -n cert-manager
+      retries: 3
+      delay: 10
+      register: webhook_ready
+      until: webhook_ready.rc == 0
+
+    - name: Apply SWIM PKI (CA and Issuers)
+      ansible.builtin.command: kubectl apply -f {{ swim_pki_manifest }}
+      retries: 5
+      delay: 10
+      register: pki_result
+      until: pki_result.rc == 0
+
+    - name: Wait for SWIM CA Certificate to be ready
+      ansible.builtin.command: >
+        kubectl wait --for=condition=ready --timeout=120s certificate/swim-ca -n cert-manager
+      retries: 5
+      delay: 10
+      register: ca_ready
+      until: ca_ready.rc == 0
+
+    - name: Verify swim-ca-issuer ClusterIssuer is ready
+      ansible.builtin.command: >
+        kubectl get clusterissuer swim-ca-issuer -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+      register: issuer_status
+      retries: 10
+      delay: 5
+      until: issuer_status.stdout == "True"
+
+    - name: Create strimzi-system namespace
+      ansible.builtin.command: kubectl create namespace strimzi-system
+      register: strimzi_ns
+      failed_when: strimzi_ns.rc != 0 and 'already exists' not in strimzi_ns.stderr
+
+    - name: Install Strimzi Kafka Operator
+      ansible.builtin.shell: |
+        kubectl create -f 'https://strimzi.io/install/latest?namespace=strimzi-system' -n strimzi-system 2>/dev/null || \
+        kubectl apply -f 'https://strimzi.io/install/latest?namespace=strimzi-system' -n strimzi-system
+      args:
+        executable: /bin/bash
+
+    - name: Wait for Strimzi operator
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=180s deployment/strimzi-cluster-operator -n strimzi-system
+      retries: 3
+      delay: 10
+      register: strimzi_wait
+      until: strimzi_wait.rc == 0
+
+    - name: Configure Strimzi to watch all namespaces
+      ansible.builtin.shell: |
+        kubectl set env deployment/strimzi-cluster-operator STRIMZI_NAMESPACE='*' -n strimzi-system
+        kubectl -n strimzi-system create clusterrolebinding strimzi-cluster-operator-namespaced \
+          --clusterrole=strimzi-cluster-operator-namespaced \
+          --serviceaccount=strimzi-system:strimzi-cluster-operator 2>/dev/null || true
+        kubectl -n strimzi-system create clusterrolebinding strimzi-cluster-operator-watched \
+          --clusterrole=strimzi-cluster-operator-watched \
+          --serviceaccount=strimzi-system:strimzi-cluster-operator 2>/dev/null || true
+        kubectl -n strimzi-system create clusterrolebinding strimzi-cluster-operator-entity-operator-delegation \
+          --clusterrole=strimzi-entity-operator \
+          --serviceaccount=strimzi-system:strimzi-cluster-operator 2>/dev/null || true
+      args:
+        executable: /bin/bash
+
+    - name: Wait for Strimzi operator restart
+      ansible.builtin.command: >
+        kubectl rollout status deployment/strimzi-cluster-operator -n strimzi-system --timeout=120s
+
+    - name: Create ArtemisCloud namespace
+      ansible.builtin.shell: >
+        kubectl create namespace activemq-artemis-operator --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Install ArtemisCloud CRDs
+      ansible.builtin.command: "kubectl apply -f {{ item }}"
+      loop:
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/crds/broker_activemqartemis_crd.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/crds/broker_activemqartemisaddress_crd.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/crds/broker_activemqartemisscaledown_crd.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/crds/broker_activemqartemissecurity_crd.yaml
+
+    - name: Install ArtemisCloud Operator RBAC and Deployment
+      ansible.builtin.command: "kubectl apply -n activemq-artemis-operator -f {{ item }}"
+      loop:
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/service_account.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/role.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/role_binding.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/election_role.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/election_role_binding.yaml
+        - https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/operator.yaml
+
+    - name: Create ClusterRole for ArtemisCloud watching all namespaces
+      ansible.builtin.shell: |
+        cat <<EOF | kubectl apply -f -
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: activemq-artemis-operator-cluster-role
+        rules:
+        - apiGroups: [""]
+          resources: ["pods", "services", "endpoints", "persistentvolumeclaims", "events", "configmaps", "secrets", "serviceaccounts"]
+          verbs: ["*"]
+        - apiGroups: ["apps"]
+          resources: ["deployments", "replicasets", "statefulsets"]
+          verbs: ["*"]
+        - apiGroups: ["networking.k8s.io"]
+          resources: ["ingresses"]
+          verbs: ["*"]
+        - apiGroups: ["route.openshift.io"]
+          resources: ["routes", "routes/custom-host", "routes/status"]
+          verbs: ["*"]
+        - apiGroups: ["broker.amq.io"]
+          resources: ["*"]
+          verbs: ["*"]
+        - apiGroups: ["rbac.authorization.k8s.io"]
+          resources: ["roles", "rolebindings"]
+          verbs: ["*"]
+        - apiGroups: ["coordination.k8s.io"]
+          resources: ["leases"]
+          verbs: ["*"]
+        - apiGroups: ["policy"]
+          resources: ["poddisruptionbudgets"]
+          verbs: ["*"]
+        EOF
+
+    - name: Create ClusterRoleBinding for ArtemisCloud watching all namespaces
+      ansible.builtin.shell: |
+        cat <<EOF | kubectl apply -f -
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: activemq-artemis-operator-cluster-rolebinding
+        subjects:
+        - kind: ServiceAccount
+          name: activemq-artemis-controller-manager
+          namespace: activemq-artemis-operator
+        roleRef:
+          kind: ClusterRole
+          name: activemq-artemis-operator-cluster-role
+          apiGroup: rbac.authorization.k8s.io
+        EOF
+
+    - name: Patch ArtemisCloud Operator to watch all namespaces
+      ansible.builtin.command: >
+        kubectl set env deployment/activemq-artemis-controller-manager
+        -n activemq-artemis-operator
+        WATCH_NAMESPACE='*'
+
+    - name: Wait for ArtemisCloud operator
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=180s deployment/activemq-artemis-controller-manager -n activemq-artemis-operator
+      retries: 5
+      delay: 15
+      register: artemis_wait
+      until: artemis_wait.rc == 0
+      async: 300
+      poll: 10
+
+    - name: Install Prometheus Operator (optional)
+      ansible.builtin.command: >
+        kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+      register: prometheus_crds
+      retries: 3
+      delay: 10
+      until: prometheus_crds.rc == 0
+      when: install_prometheus
+
+    - name: Wait for Prometheus Operator
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=180s deployment/prometheus-operator -n default
+      retries: 3
+      delay: 10
+      register: prometheus_wait
+      until: prometheus_wait.rc == 0
+      failed_when: false
+      when: install_prometheus
+
+    - name: Install SWIM Kubernetes Operator
+      ansible.builtin.command: kubectl apply -f {{ swim_operator_manifest }}
+
+    - name: Wait for SWIM operator
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=120s deployment/swim-kubernetes-operator-controller-manager -n swim-kubernetes-operator-system
+      retries: 3
+      delay: 10
+      register: swim_wait
+      until: swim_wait.rc == 0
+
+    - name: Get Minikube IP
+      ansible.builtin.command: minikube ip --profile={{ minikube_profile }}
+      register: minikube_ip_result
+      changed_when: false
+
+    - name: Set dynamic hostnames
+      ansible.builtin.set_fact:
+        minikube_ip: "{{ minikube_ip_result.stdout | trim }}"
+        keycloak_host: "keycloak.{{ minikube_ip_result.stdout | trim }}.nip.io"
+        provider_host: "swim-provider.{{ minikube_ip_result.stdout | trim }}.nip.io"
+        providervalidator_host: "swim-providervalidator.{{ minikube_ip_result.stdout | trim }}.nip.io"
+
+    - name: Display dynamic hostnames
+      ansible.builtin.debug:
+        msg: |
+          Minikube IP: {{ minikube_ip }}
+          Keycloak: https://{{ keycloak_host }}
+          Provider: https://{{ provider_host }}
+          Provider Validator: https://{{ providervalidator_host }}
+
+    - name: Read Keycloak manifest
+      ansible.builtin.slurp:
+        src: "{{ keycloak_manifest }}"
+      register: keycloak_manifest_content
+
+    - name: Apply Keycloak with dynamic hostname
+      ansible.builtin.shell: |
+        echo '{{ keycloak_manifest_content.content | b64decode | replace("KEYCLOAK_HOST_PLACEHOLDER", keycloak_host) }}' | kubectl apply -f -
+      args:
+        executable: /bin/bash
+
+    - name: Wait for Keycloak PostgreSQL
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=180s deployment/keycloak-postgres -n {{ ns_keycloak }}
+      retries: 3
+      delay: 10
+      register: keycloak_pg_wait
+      until: keycloak_pg_wait.rc == 0
+
+    - name: Wait for Keycloak deployment
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=300s deployment/keycloak -n {{ ns_keycloak }}
+      retries: 5
+      delay: 30
+      register: keycloak_wait
+      until: keycloak_wait.rc == 0
+
+    - name: Create namespaces
+      ansible.builtin.command: "kubectl create namespace {{ item }}"
+      loop:
+        - "{{ ns_consumervalidator }}"
+        - "{{ ns_backend }}"
+        - "{{ ns_providervalidator }}"
+      register: ns_create
+      failed_when: ns_create.rc != 0 and 'already exists' not in ns_create.stderr
+      when: deploy_samples
+
+    # Deploy order: Consumer Validator → Consumer → Provider → Provider Validator
+    # Consumer depends on Consumer Validator (AMQP broker)
+    # Provider Validator depends on Provider (API)
+
+    - name: 1/4 Deploy Consumer Validator
+      ansible.builtin.command: kubectl apply -f {{ samples_dir }}/consumervalidator.yaml
+      when: deploy_samples
+
+    - name: Wait for Consumer Validator Artemis to be ready
+      ansible.builtin.command: >
+        kubectl wait --for=condition=ready --timeout=300s pod -l ActiveMQArtemis=swim-consumervalidator-artemis -n {{ ns_consumervalidator }}
+      when: deploy_samples
+      failed_when: false
+      retries: 5
+      delay: 30
+
+    - name: 2/4 Deploy Consumer
+      ansible.builtin.command: kubectl apply -f {{ samples_dir }}/consumer.yaml
+      when: deploy_samples
+
+    - name: Wait for Consumer Kafka to be ready
+      ansible.builtin.shell: |
+        for i in {1..60}; do
+          STATUS=$(kubectl get kafka kafka -n {{ ns_backend }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null)
+          if [ "$STATUS" = "True" ]; then
+            echo "Kafka is ready"
+            exit 0
+          fi
+          echo "Waiting for Kafka... ($i/60)"
+          sleep 5
+        done
+        echo "Timeout waiting for Kafka"
+        kubectl get kafka kafka -n {{ ns_backend }} -o yaml
+        exit 1
+      args:
+        executable: /bin/bash
+      when: deploy_samples
+      failed_when: false
+      async: 360
+      poll: 10
+
+    - name: Read Provider manifest
+      ansible.builtin.slurp:
+        src: "{{ samples_dir }}/provider.yaml"
+      register: provider_manifest_content
+      when: deploy_samples
+
+    - name: 3/4 Deploy Provider with dynamic hostnames
+      ansible.builtin.shell: |
+        echo '{{ provider_manifest_content.content | b64decode | replace("PROVIDER_HOST_PLACEHOLDER", provider_host) | replace("KEYCLOAK_HOST_PLACEHOLDER", keycloak_host) }}' | kubectl apply -f -
+      args:
+        executable: /bin/bash
+      when: deploy_samples
+
+    - name: Wait for Provider to be ready
+      ansible.builtin.command: >
+        kubectl wait --for=condition=available --timeout=300s deployment/swim-dnotam-provider -n {{ ns_backend }}
+      when: deploy_samples
+      failed_when: false
+      retries: 5
+      delay: 30
+
+    - name: Read Provider Validator manifest
+      ansible.builtin.slurp:
+        src: "{{ samples_dir }}/providervalidator.yaml"
+      register: providervalidator_manifest_content
+      when: deploy_samples
+
+    - name: 4/4 Deploy Provider Validator with dynamic hostnames
+      ansible.builtin.shell: |
+        echo '{{ providervalidator_manifest_content.content | b64decode | replace("PROVIDERVALIDATOR_HOST_PLACEHOLDER", providervalidator_host) | replace("KEYCLOAK_HOST_PLACEHOLDER", keycloak_host) }}' | kubectl apply -f -
+      args:
+        executable: /bin/bash
+      when: deploy_samples
+
+    - name: Display success message
+      ansible.builtin.debug:
+        msg: |
+          ✅ SWIM Kubernetes Operator installed successfully!
+          
+          Minikube profile: {{ minikube_profile }}
+          Minikube IP: {{ minikube_ip }}
+          
+          Installed components:
+          - cert-manager {{ cert_manager_version }}
+          - SWIM PKI (CA: swim-ca-issuer)
+          - Strimzi Kafka Operator
+          - ArtemisCloud Operator
+          - Keycloak (realm: swim)
+          - SWIM Kubernetes Operator
+          
+          Access URLs (via nip.io with self-signed TLS):
+          - Keycloak: https://{{ keycloak_host }}
+          {% if deploy_samples %}
+          - Provider: https://{{ provider_host }}
+          - Provider Validator: https://{{ providervalidator_host }}
+          
+          Namespaces:
+          - {{ ns_keycloak }} (Keycloak)
+          - {{ ns_consumervalidator }} (Consumer Validator + Artemis + MariaDB)
+          - {{ ns_backend }} (Consumer + Provider + Kafka + MongoDB + PostgreSQL)
+          - {{ ns_providervalidator }} (Provider Validator UI)
+          
+          Keycloak Users:
+          - admin / admin
+          - user / user
+          
+          PKI Info:
+          - CA Secret: swim-ca-secret (namespace: cert-manager)
+          - ClusterIssuer: swim-ca-issuer
+          - Export CA: kubectl get secret swim-ca-secret -n cert-manager -o jsonpath='{.data.ca\.crt}' | base64 -d > swim-ca.crt
+          
+          Verify pods:
+            kubectl get pods -n {{ ns_keycloak }}
+            kubectl get pods -n {{ ns_consumervalidator }}
+            kubectl get pods -n {{ ns_backend }}
+            kubectl get pods -n {{ ns_providervalidator }}
+          {% else %}
+          
+          Next steps - Deploy SWIM components:
+            ansible-playbook swim-setup.yml -e deploy_samples=true
+          {% endif %}
+          
+          Access cluster:
+            minikube profile {{ minikube_profile }}
+            kubectl get pods -A
+

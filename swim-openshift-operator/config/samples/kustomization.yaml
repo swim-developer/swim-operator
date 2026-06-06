@@ -1,0 +1,10 @@
+## Append samples of your project ##
+resources:
+- apps_v1alpha1_swimdnotamprovidervalidator.yaml
+- apps_v1alpha1_swimdnotamconsumervalidator.yaml
+- apps_v1alpha1_swimdigitalnotamconsumer_minimal.yaml
+- apps_v1alpha1_swimdigitalnotamprovider_minimal.yaml
+- apps_v1alpha1_swimed254consumer_minimal.yaml
+- apps_v1alpha1_swimed254provider_minimal.yaml
+- apps_v1alpha1_swimed254consumervalidator.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

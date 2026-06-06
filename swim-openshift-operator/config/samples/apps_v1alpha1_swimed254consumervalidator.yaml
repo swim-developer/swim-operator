@@ -1,0 +1,14 @@
+kind: SwimEd254ConsumerValidator
+apiVersion: apps.swim-developer.github.io/v1alpha1
+metadata:
+  name: ed254-consumer-validator
+spec:
+  appConfig:
+    amqp:
+      password: admin
+      port: 5672
+      username: admin
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  replicaCount: 1
