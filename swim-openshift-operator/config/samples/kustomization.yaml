@@ -7,4 +7,9 @@ resources:
 - apps_v1alpha1_swimed254consumer_minimal.yaml
 - apps_v1alpha1_swimed254provider_minimal.yaml
 - apps_v1alpha1_swimed254consumervalidator.yaml
+- apps_v1alpha1_swimed254providervalidator.yaml
+- apps_v1alpha1_swimfficeconsumer_minimal.yaml
+- apps_v1alpha1_swimfficeprovider_minimal.yaml
+- apps_v1alpha1_swimfficeconsumervalidator.yaml
+- apps_v1alpha1_swimfficeprovidervalidator.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

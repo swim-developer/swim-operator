@@ -1,0 +1,13 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimEd254ProviderValidator
+metadata:
+  name: swim-ed254-providervalidator-sample
+spec:
+  keycloak:
+    url: "http://keycloak.local"
+    realm: "swim"
+    clientId: "provider-validator"
+  providerAPIURLs: "http://swim-ed254-provider:8080"
+  ingress:
+    enabled: true
+    host: "ed254-provider-validator.local"

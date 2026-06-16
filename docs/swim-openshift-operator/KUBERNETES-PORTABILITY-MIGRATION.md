@@ -641,7 +641,7 @@ kubectl apply -f https://strimzi.io/install/latest?namespace=swim-system
 kubectl apply -f https://raw.githubusercontent.com/artemiscloud/activemq-artemis-operator/main/deploy/operator.yaml
 
 # Deploy swim-operator
-make deploy IMG=quay.io/masales/swim-operator:latest
+make deploy IMG=quay.io/masales/swim-openshift-operator:latest
 
 # Apply a minimal consumer CR (works today without migration)
 kubectl apply -f config/samples/apps_v1alpha1_swimdigitalnotamconsumer_minimal.yaml

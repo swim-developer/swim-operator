@@ -44,6 +44,11 @@ rules:
   - swimed254consumers
   - swimed254consumervalidators
   - swimed254providers
+  - swimed254providervalidators
+  - swimfficeconsumers
+  - swimfficeconsumervalidators
+  - swimfficeproviders
+  - swimfficeprovidervalidators
   verbs:
   - create
   - delete
@@ -62,6 +67,11 @@ rules:
   - swimed254consumers/finalizers
   - swimed254consumervalidators/finalizers
   - swimed254providers/finalizers
+  - swimed254providervalidators/finalizers
+  - swimfficeconsumers/finalizers
+  - swimfficeconsumervalidators/finalizers
+  - swimfficeproviders/finalizers
+  - swimfficeprovidervalidators/finalizers
   verbs:
   - update
 - apiGroups:
@@ -74,6 +84,11 @@ rules:
   - swimed254consumers/status
   - swimed254consumervalidators/status
   - swimed254providers/status
+  - swimed254providervalidators/status
+  - swimfficeconsumers/status
+  - swimfficeconsumervalidators/status
+  - swimfficeproviders/status
+  - swimfficeprovidervalidators/status
   verbs:
   - get
   - patch

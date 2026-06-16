@@ -113,7 +113,7 @@ func (s FficeProviderStrategy) AppReplicas() int32 {
 }
 
 func (s FficeProviderStrategy) AppResources() corev1.ResourceRequirements {
-	return resources.ResourcesOrDefault(s.Payload.Provider.Resources, "512Mi", "500m", "1Gi", "2")
+	return s.Payload.Provider.Resources
 }
 
 func (s FficeProviderStrategy) PostgresParams(p ProviderBuildParams, managedBy string) resources.PostgresParams {

@@ -316,7 +316,7 @@ func BuildConsumerClientDeployment(p ConsumerBuildParams, managedBy string, conf
 		ServiceAccountName:     p.Name,
 		Replicas:               consumerClientReplicas(p),
 		Image:                  consumerClientImage(p),
-		ContainerResources:     resources.ResourcesOrDefault(consumerClientResources(p), "512Mi", "500m", "1Gi", "2"),
+		ContainerResources:     consumerClientResources(p),
 		ConfigHash:             configHash,
 		ConfigMapName:          fmt.Sprintf("%s-config", p.Name),
 		ProvidersSecretName:    fmt.Sprintf("%s-providers", p.Name),

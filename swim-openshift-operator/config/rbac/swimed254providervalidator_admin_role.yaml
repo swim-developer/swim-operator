@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: swim-openshift-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: swimed254providervalidator-admin-role
+rules:
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimed254providervalidators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimed254providervalidators/status
+  verbs:
+  - get

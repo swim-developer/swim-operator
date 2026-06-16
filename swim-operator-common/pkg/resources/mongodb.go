@@ -63,7 +63,7 @@ func BuildMongoService(name, namespace string, labels map[string]string) *corev1
 
 func BuildMongoDeployment(p MongoParams, configHash string) *appsv1.Deployment {
 	replicas := int32(1)
-	res := ResourcesOrDefault(p.Resources, "512Mi", "250m", "1Gi", "500m")
+	res := p.Resources
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Name: p.Name, Namespace: p.Namespace, Labels: p.Labels},

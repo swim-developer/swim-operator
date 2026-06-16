@@ -1,0 +1,23 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimFficeConsumerValidator
+metadata:
+  name: swim-ffice-consumervalidator-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  artemis:
+    broker:
+      name: "ffice-consumervalidator-artemis"
+      size: 1
+    credentials:
+      adminUser: "admin"
+      adminPassword: "adminPassword"
+  appConfig:
+    amqp:
+      port: 5672
+      username: "admin"
+      password: "adminPassword"
+  image:
+    repository: "quay.io/masales/swim-ffice-consumer-validator"
+    tag: "latest"

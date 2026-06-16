@@ -1,0 +1,26 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimFficeConsumer
+metadata:
+  name: swim-ffice-consumer
+spec:
+  certManager:
+    issuerKind: ClusterIssuer
+    issuerName: swim-ca-issuer
+  consumer:
+    config:
+      providers:
+        - providerId: "validator"
+          subscriptionManager:
+            url: "https://ffice-consumer-validator-swim-external-provider.apps.ocp4.masales.cloud"
+          amqpBroker:
+            host: "ffice-consumer-validator-artemis-swim-external-provider.apps.ocp4.masales.cloud"
+            port: 443
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      fficeSubscriptions:
+        - provider: "validator"
+          topic: "ffice-events-topic"
+          description: "FF-ICE flight information subscription"
+      observability:
+        otelEndpoint: "http://tempo-simplest-distributor.tempostack.svc.cluster.local:4317"

@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: swim-kubernetes-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: swimed254consumervalidator-editor-role
+rules:
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimed254consumervalidators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimed254consumervalidators/status
+  verbs:
+  - get

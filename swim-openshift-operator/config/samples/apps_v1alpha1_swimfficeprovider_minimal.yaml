@@ -1,0 +1,25 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimFficeProvider
+metadata:
+  name: swim-ffice-provider
+spec:
+  certManager:
+    issuerName: swim-ca-issuer
+    issuerKind: ClusterIssuer
+  artemis:
+    acceptors:
+      verifyHost: false
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/'
+      realm: swim
+      clientId: amq-broker
+  provider:
+    swimTopics:
+      - "ffice-events-topic"
+    heartbeatIntervalSeconds: 15
+    observability:
+      otelEndpoint: 'http://tempo-simplest-distributor.tempostack.svc.cluster.local:4317'
+    oidc:
+      authServerUrl: 'https://rhbk.apps.ocp4.masales.cloud/realms/swim'
+      clientId: 'swim-ffice-provider'
+      clientSecret: 'CHANGE_ME'

@@ -162,33 +162,24 @@ build: manifests generate fmt vet ## Build manager binary.
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/main.go
 
-# If you wish to build the manager image targeting other platforms you can use the --platform flag.
-# (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
-# More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-.PHONY: docker-build
-docker-build: ## Build docker image with the manager (amd64 for OpenShift).
-	$(CONTAINER_TOOL) build --no-cache --platform linux/amd64 -t ${IMG} .
+# Build context is the parent directory (swim-operator/) to include swim-operator-common.
+PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
+.PHONY: image-build
+image-build: ## Build OCI image with the manager (amd64 for OpenShift).
+	$(CONTAINER_TOOL) build --no-cache --platform linux/amd64 -t ${IMG} -f Containerfile ..
 
-.PHONY: docker-push
-docker-push: ## Push docker image with the manager.
+.PHONY: push
+push: ## Push OCI image with the manager.
 	$(CONTAINER_TOOL) push ${IMG}
 
-# PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
-# architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
-# - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
-# - have enabled BuildKit. More info: https://docs.docker.com/develop/develop-images/build_enhancements/
-# - be able to push the image to your registry (i.e. if you do not set a valid value via IMG=<myregistry/image:<tag>> then the export will fail)
-# To adequately provide solutions that are compatible with multiple platforms, you should consider using this option.
-PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
-.PHONY: docker-buildx
-docker-buildx: ## Build and push docker image for the manager for cross-platform support
-	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
-	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
+.PHONY: image-buildx
+image-buildx: ## Build and push OCI image for the manager for cross-platform support.
+	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Containerfile > Containerfile.cross
 	- $(CONTAINER_TOOL) buildx create --name swim-openshift-operator-builder
 	$(CONTAINER_TOOL) buildx use swim-openshift-operator-builder
-	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
+	- $(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Containerfile.cross ..
 	- $(CONTAINER_TOOL) buildx rm swim-openshift-operator-builder
-	rm Dockerfile.cross
+	rm Containerfile.cross
 
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -313,11 +304,11 @@ bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metada
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
-	$(CONTAINER_TOOL) build --no-cache --platform linux/amd64 -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	$(CONTAINER_TOOL) build --no-cache --platform linux/amd64 -f bundle.Containerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
-	$(MAKE) docker-push IMG=$(BUNDLE_IMG)
+	$(MAKE) push IMG=$(BUNDLE_IMG)
 
 .PHONY: opm
 OPM = $(LOCALBIN)/opm
@@ -355,13 +346,14 @@ endif
 catalog-build: opm ## Build a catalog image (amd64 for OpenShift).
 	-$(CONTAINER_TOOL) rmi $(CATALOG_IMG) 2>/dev/null || true
 	$(OPM) index add --container-tool $(CONTAINER_TOOL) --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT) --generate
-	$(CONTAINER_TOOL) build --platform linux/amd64 -f index.Dockerfile -t $(CATALOG_IMG) .
-	rm -f index.Dockerfile
+	mv index.Dockerfile index.Containerfile
+	$(CONTAINER_TOOL) build --platform linux/amd64 -f index.Containerfile -t $(CATALOG_IMG) .
+	rm -f index.Containerfile
 
 # Push the catalog image.
 .PHONY: catalog-push
 catalog-push: ## Push a catalog image.
-	$(MAKE) docker-push IMG=$(CATALOG_IMG)
+	$(MAKE) push IMG=$(CATALOG_IMG)
 
 ##@ OperatorHub Distribution
 
@@ -394,11 +386,11 @@ release: release-build release-push update-catalog-source ## Build and push all 
 	@echo ""
 
 .PHONY: release-build
-release-build: bundle docker-build bundle-build ## Build operator and bundle images.
+release-build: bundle image-build bundle-build ## Build operator and bundle images.
 	@echo "Operator and bundle images built successfully!"
 
 .PHONY: release-push
-release-push: docker-push bundle-push ## Push operator and bundle images to registry.
+release-push: push bundle-push ## Push operator and bundle images to registry.
 	@echo "Operator and bundle images pushed successfully!"
 	@echo "Building catalog with pushed bundle..."
 	$(MAKE) catalog-build catalog-push

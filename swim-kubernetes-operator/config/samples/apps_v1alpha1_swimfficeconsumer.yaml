@@ -1,0 +1,27 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimFficeConsumer
+metadata:
+  name: swim-ffice-consumer-sample
+spec:
+  kafka:
+    enabled: true
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  consumer:
+    config:
+      providers:
+        - providerId: validator
+          subscriptionManager:
+            url: "http://ffice-consumer-validator:8080"
+          amqpBroker:
+            host: "ffice-consumer-validator-artemis-hdls-svc"
+            port: 5672
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      fficeSubscriptions:
+        - provider: "validator"
+          topic: "ffice-events-topic"
+          description: "FF-ICE flight information subscription"
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"

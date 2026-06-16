@@ -9,6 +9,11 @@ resources:
 - bases/apps.swim-developer.github.io_swimed254consumers.yaml
 - bases/apps.swim-developer.github.io_swimed254consumervalidators.yaml
 - bases/apps.swim-developer.github.io_swimed254providers.yaml
+- bases/apps.swim-developer.github.io_swimed254providervalidators.yaml
+- bases/apps.swim-developer.github.io_swimfficeconsumers.yaml
+- bases/apps.swim-developer.github.io_swimfficeconsumervalidators.yaml
+- bases/apps.swim-developer.github.io_swimfficeproviders.yaml
+- bases/apps.swim-developer.github.io_swimfficeprovidervalidators.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

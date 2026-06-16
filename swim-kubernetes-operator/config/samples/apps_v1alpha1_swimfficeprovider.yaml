@@ -1,0 +1,37 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimFficeProvider
+metadata:
+  name: swim-ffice-provider-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  provider:
+    swimTopics:
+      - "ffice-events-topic"
+    heartbeatIntervalSeconds: 15
+    ingress:
+      enabled: true
+      host: "swim-ffice-provider.local"
+    oidc:
+      authServerUrl: "http://keycloak:8080/auth/realms/swim"
+      clientId: "swim-ffice-provider"
+      clientSecret: "CHANGE_ME"
+  postgres:
+    database: "swim-ffice"
+    user: "ffice"
+    password: "password123"
+    storageSize: "1Gi"
+  kafka:
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  artemis:
+    name: "swim-ffice-artemis"
+    size: 1
+    acceptors:
+      ingressHost: "ffice-artemis.local"
+    oidc:
+      enabled: false
+      authServerUrl: "http://keycloak:8080/auth"
+      realm: "swim"
+      clientId: "amq-broker"
+      clientSecret: "secret"

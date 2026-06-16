@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: swim-kubernetes-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: swimfficeprovidervalidator-viewer-role
+rules:
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimfficeprovidervalidators
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps.swim-developer.github.io
+  resources:
+  - swimfficeprovidervalidators/status
+  verbs:
+  - get

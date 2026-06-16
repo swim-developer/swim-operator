@@ -51,7 +51,7 @@ make docker-build
 make docker-push
 ```
 
-Default image: `quay.io/masales/swim-operator:v0.0.1` (configured in Makefile).
+Default image: `quay.io/masales/swim-openshift-operator:v0.0.1` (configured in Makefile).
 
 ## Installation via OLM (OperatorHub)
 
@@ -252,7 +252,7 @@ oc describe pod -l control-plane=controller-manager -n openshift-operators
 ```
 
 Common causes:
-- **ErrImagePull:** Image doesn't exist at `quay.io/masales/swim-operator:v0.0.1`.
+- **ErrImagePull:** Image doesn't exist at `quay.io/masales/swim-openshift-operator:v0.0.1`.
 - **Exec format error:** Image built for wrong architecture (arm64 instead of amd64). Rebuild with `make docker-build` (includes `--platform linux/amd64`).
 
 ### CatalogSource not READY

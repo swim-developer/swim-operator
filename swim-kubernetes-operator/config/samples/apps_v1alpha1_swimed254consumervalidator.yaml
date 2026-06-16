@@ -1,0 +1,23 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimEd254ConsumerValidator
+metadata:
+  name: swim-ed254-consumervalidator-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  artemis:
+    broker:
+      name: "ed254-consumervalidator-artemis"
+      size: 1
+    credentials:
+      adminUser: "admin"
+      adminPassword: "adminPassword"
+  appConfig:
+    amqp:
+      port: 5672
+      username: "admin"
+      password: "adminPassword"
+  image:
+    repository: "quay.io/masales/swim-ed254-consumer-validator"
+    tag: "latest"

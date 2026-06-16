@@ -117,7 +117,7 @@ func (s DnotamProviderStrategy) AppReplicas() int32 {
 }
 
 func (s DnotamProviderStrategy) AppResources() corev1.ResourceRequirements {
-	return resources.ResourcesOrDefault(s.Payload.Provider.Resources, "512Mi", "500m", "1Gi", "2")
+	return s.Payload.Provider.Resources
 }
 
 func (s DnotamProviderStrategy) PostgresParams(p ProviderBuildParams, managedBy string) resources.PostgresParams {

@@ -1,0 +1,39 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimEd254Provider
+metadata:
+  name: swim-ed254-provider-sample
+spec:
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"
+  provider:
+    aerodromes:
+      - "LPPT"
+      - "LPPR"
+    heartbeatIntervalSeconds: 30
+    maxConsumers: 100
+    ingress:
+      enabled: true
+      host: "swim-ed254-provider.local"
+    oidc:
+      authServerUrl: "http://keycloak:8080/auth/realms/swim"
+      clientId: "swim-ed254-provider"
+      clientSecret: "CHANGE_ME"
+  postgres:
+    database: "swim-ed254"
+    user: "ed254"
+    password: "password123"
+    storageSize: "1Gi"
+  kafka:
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  artemis:
+    name: "swim-ed254-artemis"
+    size: 1
+    acceptors:
+      ingressHost: "ed254-artemis.local"
+    oidc:
+      enabled: false
+      authServerUrl: "http://keycloak:8080/auth"
+      realm: "swim"
+      clientId: "amq-broker"
+      clientSecret: "secret"

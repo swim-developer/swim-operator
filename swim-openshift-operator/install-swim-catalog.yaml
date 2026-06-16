@@ -1,11 +1,11 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
-  name: swim-operator-catalog
+  name: swim-openshift-operator-catalog
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: quay.io/masales/swim-operator-catalog:v0.0.1
+  image: quay.io/masales/swim-openshift-operator-catalog:v0.0.1
   grpcPodConfig:
     imagePullPolicy: Always
   displayName: SWIM Operator Catalog

@@ -114,7 +114,7 @@ func (s Ed254ProviderStrategy) AppReplicas() int32 {
 }
 
 func (s Ed254ProviderStrategy) AppResources() corev1.ResourceRequirements {
-	return resources.ResourcesOrDefault(s.Payload.Provider.Resources, "512Mi", "500m", "1Gi", "2")
+	return s.Payload.Provider.Resources
 }
 
 func (s Ed254ProviderStrategy) PostgresParams(p ProviderBuildParams, managedBy string) resources.PostgresParams {

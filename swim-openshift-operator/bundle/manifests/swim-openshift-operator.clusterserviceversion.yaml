@@ -115,7 +115,7 @@ metadata:
           "metadata": {
             "labels": {
               "app.kubernetes.io/managed-by": "kustomize",
-              "app.kubernetes.io/name": "swim-operator"
+              "app.kubernetes.io/name": "swim-openshift-operator"
             },
             "name": "dnotam-provider-validator"
           },
@@ -244,11 +244,11 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    containerImage: quay.io/masales/swim-operator:v0.0.1
+    containerImage: quay.io/masales/swim-openshift-operator:v0.0.1
     createdAt: "2026-04-08T01:19:01Z"
     operators.operatorframework.io/builder: operator-sdk-v1.42.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
-  name: swim-operator.v0.0.1
+  name: swim-openshift-operator.v0.0.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -296,6 +296,36 @@ spec:
       kind: SwimEd254ConsumerValidator
       name: swimed254consumervalidators.apps.swim-developer.github.io
       version: v1alpha1
+    - description: SwimEd254ProviderValidator deploys the ED-254 Provider Validator
+        for testing and demonstrating SWIM ED-254 Provider APIs
+      displayName: SWIM ED-254 Provider Validator
+      kind: SwimEd254ProviderValidator
+      name: swimed254providervalidators.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: SwimFficeConsumer deploys the FF-ICE Flight and Flow Information
+        consumer with MongoDB, Kafka, and mTLS infrastructure
+      displayName: SWIM FF-ICE Consumer
+      kind: SwimFficeConsumer
+      name: swimfficeconsumers.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: SwimFficeProvider deploys the FF-ICE Flight and Flow Information
+        provider with PostgreSQL, Artemis, Kafka, and mTLS infrastructure
+      displayName: SWIM FF-ICE Provider
+      kind: SwimFficeProvider
+      name: swimfficeproviders.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: SwimFficeConsumerValidator deploys the FF-ICE Consumer Validator
+        with MariaDB, Artemis, and mTLS infrastructure
+      displayName: SWIM FF-ICE Consumer Validator
+      kind: SwimFficeConsumerValidator
+      name: swimfficeconsumervalidators.apps.swim-developer.github.io
+      version: v1alpha1
+    - description: SwimFficeProviderValidator deploys the FF-ICE Provider Validator
+        for testing and demonstrating SWIM FF-ICE Provider APIs
+      displayName: SWIM FF-ICE Provider Validator
+      kind: SwimFficeProviderValidator
+      name: swimfficeprovidervalidators.apps.swim-developer.github.io
+      version: v1alpha1
     required:
     - description: Represents a Kafka cluster
       displayName: AMQ Streams (Kafka)
@@ -324,6 +354,12 @@ spec:
 
     This operator orchestrates the complex infrastructure required for aviation data exchange, handling certificate management (mTLS), middleware provisioning (Kafka, Artemis), and application lifecycle management on any Kubernetes environment such as **Red Hat Openshift**.
 
+    ## Supported SWIM Services
+
+    * **DNOTAM** (Digital NOTAM) — aeronautical notice management (CP1 mandatory)
+    * **ED-254** (Extended AMAN) — arrival sequence service (EUROCAE ED-254)
+    * **FF-ICE** (Flight and Flow Information) — collaborative flight planning
+
     ## Key Features
 
     * **Automated Infrastructure**: Provisioning of Kafka Clusters (via AMQ Streams) and ActiveMQ Artemis Brokers (via AMQ Broker).
@@ -333,7 +369,7 @@ spec:
 
     ## Managed Custom Resources (CRDs)
 
-    The operator exposes four specialized resources to build your SWIM topology:
+    The operator exposes twelve specialized resources (four per SWIM service) to build your SWIM topology:
 
     ### 1. SwimDigitalNotamConsumer
     Represents a **Consumer Node**. It establishes a secure link to external or internal SWIM Services to ingest and process aeronautical data.
@@ -593,18 +629,18 @@ spec:
           - subjectaccessreviews
           verbs:
           - create
-        serviceAccountName: swim-operator-controller-manager
+        serviceAccountName: swim-openshift-operator-controller-manager
       deployments:
       - label:
           app.kubernetes.io/managed-by: kustomize
-          app.kubernetes.io/name: swim-operator
+          app.kubernetes.io/name: swim-openshift-operator
           control-plane: controller-manager
-        name: swim-operator-controller-manager
+        name: swim-openshift-operator-controller-manager
         spec:
           replicas: 1
           selector:
             matchLabels:
-              app.kubernetes.io/name: swim-operator
+              app.kubernetes.io/name: swim-openshift-operator
               control-plane: controller-manager
           strategy: {}
           template:
@@ -612,7 +648,7 @@ spec:
               annotations:
                 kubectl.kubernetes.io/default-container: manager
               labels:
-                app.kubernetes.io/name: swim-operator
+                app.kubernetes.io/name: swim-openshift-operator
                 control-plane: controller-manager
             spec:
               containers:
@@ -622,7 +658,7 @@ spec:
                 - --health-probe-bind-address=:8081
                 command:
                 - /manager
-                image: quay.io/masales/swim-operator:v0.0.1
+                image: quay.io/masales/swim-openshift-operator:v0.0.1
                 imagePullPolicy: Always
                 livenessProbe:
                   httpGet:
@@ -653,7 +689,7 @@ spec:
                 runAsNonRoot: true
                 seccompProfile:
                   type: RuntimeDefault
-              serviceAccountName: swim-operator-controller-manager
+              serviceAccountName: swim-openshift-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -688,7 +724,7 @@ spec:
           verbs:
           - create
           - patch
-        serviceAccountName: swim-operator-controller-manager
+        serviceAccountName: swim-openshift-operator-controller-manager
     strategy: deployment
   installModes:
   - supported: true

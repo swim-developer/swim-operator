@@ -81,16 +81,7 @@ func BuildMariaDBStatefulSet(p MariaDBParams) *appsv1.StatefulSet {
 							EnvLiteral("MARIADB_MYSQL_LOCALHOST_USER", "1"),
 						},
 						VolumeMounts: []corev1.VolumeMount{{Name: "data", MountPath: "/var/lib/mysql", SubPath: "mysql"}},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceMemory: resource.MustParse("256Mi"),
-								corev1.ResourceCPU:    resource.MustParse("100m"),
-							},
-							Limits: corev1.ResourceList{
-								corev1.ResourceMemory: resource.MustParse("512Mi"),
-								corev1.ResourceCPU:    resource.MustParse("500m"),
-							},
-						},
+					Resources: corev1.ResourceRequirements{},
 						StartupProbe: &corev1.Probe{
 							ProbeHandler: corev1.ProbeHandler{
 								Exec: &corev1.ExecAction{

@@ -1,0 +1,29 @@
+apiVersion: apps.swim-developer.github.io/v1alpha1
+kind: SwimEd254Consumer
+metadata:
+  name: swim-ed254-consumer-sample
+spec:
+  kafka:
+    enabled: true
+    bootstrapServers: "kafka-kafka-bootstrap:9092"
+  consumer:
+    config:
+      providers:
+        - providerId: validator
+          subscriptionManager:
+            url: "http://ed254-consumer-validator:8080"
+          amqpBroker:
+            host: "ed254-consumer-validator-artemis-hdls-svc"
+            port: 5672
+            sslEnabled: true
+            username: "admin"
+            password: "admin"
+      ed254Subscriptions:
+        - provider: "validator"
+          destinationAerodrome:
+            - aerodromeDesignator: "LPPT"
+            - aerodromeDesignator: "LPPR"
+          description: "Arrival sequence for Lisbon and Porto airports"
+  certManager:
+    issuerName: "selfsigned-issuer"
+    issuerKind: "ClusterIssuer"

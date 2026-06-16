@@ -45,7 +45,7 @@ func BuildPVDeployment(p PVBuildParams, managedBy, configHash string) *appsv1.De
 		image = "quay.io/masales/swim-dnotam-provider-validator:latest"
 	}
 	replicas := int32(1)
-	containerResources := resources.ResourcesOrDefault(corev1.ResourceRequirements{}, "128Mi", "100m", "512Mi", "500m")
+	containerResources := corev1.ResourceRequirements{}
 	mariadbSecretName := GetMariaDBSecretName(p)
 	mariadbHost := resources.StrDefault(p.Spec.MariaDB.Host, MariaDBServiceName(p.CRName))
 	mariadbPort := resources.Int32Default(p.Spec.MariaDB.Port, 3306)

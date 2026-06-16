@@ -168,7 +168,7 @@ helm install swim-operator ./charts/swim-kubernetes-operator \
 
 ```bash
 make install
-make deploy IMG=quay.io/masales/swim-operator:latest
+make deploy IMG=quay.io/masales/swim-openshift-operator:latest
 ```
 
 ## Technology

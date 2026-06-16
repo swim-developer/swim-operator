@@ -82,7 +82,7 @@ exit 1`, mariadbHost, mariadbPort)},
 							{SecretRef: &corev1.SecretEnvSource{LocalObjectReference: corev1.LocalObjectReference{Name: secretName}}},
 						},
 						Env:       []corev1.EnvVar{resources.EnvLiteral("TZ", "UTC")},
-						Resources: resources.ResourcesOrDefault(corev1.ResourceRequirements{}, "256Mi", "250m", "1Gi", "2"),
+						Resources: corev1.ResourceRequirements{},
 						VolumeMounts: []corev1.VolumeMount{
 							{Name: "server-cert", MountPath: "/certs/server", ReadOnly: true},
 							{Name: "ca-cert", MountPath: "/certs/ca", ReadOnly: true},

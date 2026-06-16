@@ -69,7 +69,7 @@ func BuildPostgresService(name, namespace string, labels map[string]string) *cor
 func BuildPostgresStatefulSet(p PostgresParams) *appsv1.StatefulSet {
 	replicas := int32(1)
 	image := StrDefault(p.Image, "registry.redhat.io/rhel9/postgresql-16:latest")
-	res := ResourcesOrDefault(p.Resources, "512Mi", "250m", "1Gi", "1")
+	res := p.Resources
 
 	return &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{Name: p.Name, Namespace: p.Namespace, Labels: p.Labels},
@@ -124,7 +124,7 @@ func BuildPostgresStatefulSet(p PostgresParams) *appsv1.StatefulSet {
 func BuildUpstreamPostgresStatefulSet(p PostgresParams) *appsv1.StatefulSet {
 	replicas := int32(1)
 	image := StrDefault(p.Image, "docker.io/postgres:16")
-	res := ResourcesOrDefault(p.Resources, "512Mi", "250m", "1Gi", "1")
+	res := p.Resources
 	database := StrDefault(p.Database, defaultPostgresSecretDatabase)
 	user := StrDefault(p.User, defaultPostgresSecretUser)
 	password := StrDefault(p.Password, defaultPostgresSecretPassword)

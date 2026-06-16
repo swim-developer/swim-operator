@@ -1,12 +1,12 @@
 #!/bin/bash
 
 export VERSION=0.0.1
-export IMG=quay.io/masales/swim-operator:v${VERSION}
-export BUNDLE_IMG=quay.io/masales/swim-operator-bundle:v${VERSION}
-export CATALOG_IMG=quay.io/masales/swim-operator-catalog:v${VERSION}
+export IMG=quay.io/masales/swim-openshift-operator:v${VERSION}
+export BUNDLE_IMG=quay.io/masales/swim-openshift-operator-bundle:v${VERSION}
+export CATALOG_IMG=quay.io/masales/swim-openshift-operator-catalog:v${VERSION}
 
-make docker-build IMG=$IMG
-make docker-push IMG=$IMG
+make image-build IMG=$IMG
+make push IMG=$IMG
 
 make bundle IMG=$IMG VERSION=$VERSION
 make bundle-build BUNDLE_IMG=$BUNDLE_IMG
